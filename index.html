@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Astra AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#09090b;
+  --s1:#111113;
+  --s2:#18181b;
+  --s3:#27272a;
+  --s4:#3f3f46;
+  --t1:#fafafa;
+  --t2:#a1a1aa;
+  --t3:#52525b;
+  --a:#6366f1;
+  --a2:#8b5cf6;
+  --a3:#06b6d4;
+  --grad:linear-gradient(135deg,#6366f1,#8b5cf6,#06b6d4);
+  --r:16px;
+  --font:'Geist',system-ui,sans-serif;
+  --mono:'Geist Mono',monospace;
+}
+
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+
+/* ─── AMBIENT ─── */
+#ambient{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 70% 50% at 15% 0%,rgba(99,102,241,.06) 0%,transparent 55%),
+             radial-gradient(ellipse 50% 40% at 85% 100%,rgba(139,92,246,.05) 0%,transparent 55%)}
+
+/* ─── HEADER ─── */
+header{position:relative;z-index:30;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;height:52px;border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(9,9,11,.8);backdrop-filter:blur(20px)}
+
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo-mark{width:28px;height:28px;border-radius:8px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  box-shadow:0 0 16px rgba(99,102,241,.4);animation:markPulse 4s ease-in-out infinite}
+@keyframes markPulse{0%,100%{box-shadow:0 0 16px rgba(99,102,241,.35)}50%{box-shadow:0 0 28px rgba(139,92,246,.5)}}
+.logo-name{font-size:17px;font-weight:600;letter-spacing:-.5px;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-tag{font-size:9px;color:var(--t3);border:1px solid var(--s3);padding:2px 6px;border-radius:20px;font-weight:400;letter-spacing:.5px}
+
+.hdr-btns{display:flex;gap:4px}
+.hbtn{width:34px;height:34px;border-radius:9px;border:none;background:transparent;
+  color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .18s;position:relative}
+.hbtn:hover{background:var(--s2);color:var(--t1)}
+.hbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ─── LAYOUT ─── */
+.layout{display:flex;flex:1;overflow:hidden;position:relative;z-index:1}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:232px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.05);
+  background:var(--s1);display:flex;flex-direction:column;padding:10px 8px;
+  overflow:hidden;transition:width .28s cubic-bezier(.4,0,.2,1),opacity .28s,padding .28s}
+.sidebar.closed{width:0;padding:0;opacity:0;pointer-events:none}
+
+.sb-new{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:11px;
+  border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--t1);
+  cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;width:100%;
+  transition:all .18s;margin-bottom:6px;white-space:nowrap}
+.sb-new:hover{background:var(--s2);border-color:rgba(99,102,241,.4)}
+.sb-new-icon{width:18px;height:18px;border-radius:5px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+.sb-label{font-size:9px;text-transform:uppercase;letter-spacing:1.3px;color:var(--t3);
+  padding:8px 9px 3px;font-weight:600;white-space:nowrap}
+.sb-row{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:9px;
+  font-size:12.5px;color:var(--t2);cursor:pointer;transition:all .15s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-row:hover{background:var(--s2);color:var(--t1)}
+.sb-row.on{background:var(--s2);color:var(--t1)}
+.sb-row span{flex-shrink:0}
+
+/* ─── CHAT PANE ─── */
+.pane{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ─── WELCOME ─── */
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px 16px;gap:22px;overflow-y:auto}
+.w-orb{width:64px;height:64px;border-radius:50%;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:0 0 0 10px rgba(99,102,241,.07),0 0 48px rgba(99,102,241,.22);
+  animation:orbFloat 6s ease-in-out infinite}
+@keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.w-title{font-size:32px;font-weight:600;letter-spacing:-1px;text-align:center;line-height:1.1}
+.w-title em{font-style:normal;background:var(--grad);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.w-sub{font-size:13.5px;color:var(--t2);text-align:center;max-width:380px;line-height:1.65;font-weight:300}
+
+.w-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:480px}
+.chip{padding:4px 11px;border-radius:20px;border:1px solid var(--s3);background:var(--s2);
+  font-size:11.5px;color:var(--t2);display:flex;align-items:center;gap:4px;transition:all .15s;cursor:default}
+.chip:hover{border-color:rgba(99,102,241,.4);color:var(--t1)}
+
+.w-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;max-width:540px;width:100%}
+.wcard{background:var(--s1);border:1px solid rgba(255,255,255,.06);border-radius:14px;
+  padding:15px;cursor:pointer;transition:all .22s;text-align:left}
+.wcard:hover{border-color:rgba(99,102,241,.3);background:var(--s2);
+  transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.wcard-icon{font-size:20px;margin-bottom:7px}
+.wcard-t{font-size:12.5px;font-weight:600;margin-bottom:3px}
+.wcard-d{font-size:11px;color:var(--t2);line-height:1.45;font-weight:300}
+
+/* ─── MESSAGES ─── */
+.msgs{flex:1;overflow-y:auto;display:none;flex-direction:column;padding:18px 0 6px;
+  scrollbar-width:thin;scrollbar-color:var(--s3) transparent}
+.msgs.on{display:flex}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:4px}
+
+.msg{padding:7px max(5%,calc(50% - 360px));animation:msgUp .25s ease}
+@keyframes msgUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* user */
+.msg-u{display:flex;justify-content:flex-end;flex-direction:column;align-items:flex-end;gap:6px}
+.bubble{background:var(--s2);border:1px solid rgba(255,255,255,.07);
+  border-radius:16px 16px 4px 16px;padding:11px 15px;max-width:68%;
+  font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.file-pill{display:inline-flex;align-items:center;gap:6px;background:var(--s3);
+  border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 10px;
+  font-size:11px;color:var(--t2);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-pill svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+
+/* ai */
+.msg-a{display:flex;gap:11px;align-items:flex-start}
+.ai-av{width:28px;height:28px;border-radius:50%;background:var(--grad);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:12px;margin-top:1px;
+  box-shadow:0 0 10px rgba(99,102,241,.2)}
+.ai-wrap{flex:1;min-width:0}
+.ai-text{font-size:14px;line-height:1.82;color:var(--t1)}
+.ai-text p{margin-bottom:10px}
+.ai-text p:last-child{margin-bottom:0}
+.ai-text h1{font-size:19px;font-weight:600;margin:16px 0 8px;letter-spacing:-.3px}
+.ai-text h2{font-size:16.5px;font-weight:600;margin:14px 0 7px;letter-spacing:-.2px}
+.ai-text h3{font-size:14.5px;font-weight:600;margin:12px 0 6px;color:var(--a2)}
+.ai-text strong{font-weight:600;color:var(--t1)}
+.ai-text em{color:var(--t2);font-style:italic}
+.ai-text a{color:rgba(99,102,241,.9);text-decoration:underline;text-underline-offset:3px}
+.ai-text ul,.ai-text ol{padding-left:18px;margin-bottom:10px}
+.ai-text li{margin-bottom:4px;line-height:1.7}
+.ai-text blockquote{border-left:2px solid var(--a2);padding-left:13px;color:var(--t2);margin:10px 0;font-style:italic}
+.ai-text hr{border:none;border-top:1px solid var(--s3);margin:14px 0}
+.ai-text table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.ai-text th,.ai-text td{padding:8px 12px;border:1px solid var(--s3);text-align:left}
+.ai-text th{background:var(--s2);font-weight:600;color:var(--t1)}
+.ai-text td{color:var(--t2)}
+.ai-text code{font-family:var(--mono);background:var(--s2);border:1px solid var(--s3);
+  border-radius:5px;padding:1px 5px;font-size:12px;color:var(--a3)}
+
+/* code block */
+.cb{background:var(--s1);border:1px solid rgba(255,255,255,.06);border-radius:12px;margin:11px 0;overflow:hidden}
+.cb-head{display:flex;align-items:center;justify-content:space-between;
+  padding:7px 13px;border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:11px;color:var(--t3);font-family:var(--mono)}
+.cb-copy{background:transparent;border:none;color:var(--t3);cursor:pointer;
+  font-size:11px;padding:3px 8px;border-radius:5px;transition:all .15s;font-family:var(--font);
+  display:flex;align-items:center;gap:4px}
+.cb-copy:hover{background:var(--s3);color:var(--t1)}
+.cb-copy svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8}
+.cb pre{padding:13px 15px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.68;color:var(--t1)}
+.cb pre code{background:none;border:none;padding:0;color:inherit;font-size:inherit}
+
+/* thinking dots */
+.dots{display:flex;gap:4px;align-items:center;padding:5px 0}
+.dot{width:6px;height:6px;border-radius:50%;animation:dotP 1.3s infinite}
+.dot:nth-child(1){background:var(--a)}
+.dot:nth-child(2){background:var(--a2);animation-delay:.18s}
+.dot:nth-child(3){background:var(--a3);animation-delay:.36s}
+@keyframes dotP{0%,80%,100%{transform:scale(.45);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* msg actions */
+.msg-acts{display:flex;gap:1px;margin-top:7px;opacity:0;transition:opacity .18s}
+.msg-a:hover .msg-acts{opacity:1}
+.act{display:flex;align-items:center;gap:3px;padding:4px 8px;border-radius:6px;border:none;
+  background:transparent;color:var(--t3);cursor:pointer;font-size:11.5px;
+  font-family:var(--font);transition:all .15s}
+.act:hover{background:var(--s2);color:var(--t1)}
+.act svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+.act.green{color:#10b981}
+.act.red{color:#f87171}
+.act.blue{color:var(--a)}
+
+/* ─── INPUT ─── */
+.input-zone{padding:10px max(5%,calc(50% - 360px)) 16px;background:var(--bg);border-top:1px solid rgba(255,255,255,.05)}
+.input-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.model-tag{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t3);
+  padding:4px 10px;border-radius:20px;border:1px solid var(--s3);background:transparent;cursor:default}
+.model-dot{width:6px;height:6px;border-radius:50%;background:var(--grad);box-shadow:0 0 5px rgba(99,102,241,.5)}
+.char-info{font-size:10.5px;color:var(--t3)}
+
+/* file preview area */
+#file-preview{display:none;flex-wrap:wrap;gap:6px;padding:0 2px 8px}
+#file-preview.has{display:flex}
+.fp-item{display:inline-flex;align-items:center;gap:5px;background:var(--s2);
+  border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:4px 9px;font-size:11px;color:var(--t2)}
+.fp-item svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.fp-rm{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;
+  line-height:1;padding:0 0 0 4px;transition:color .15s}
+.fp-rm:hover{color:var(--t1)}
+
+.ibox{background:var(--s1);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);
+  padding:4px 4px 4px 16px;display:flex;align-items:flex-end;gap:4px;
+  transition:border-color .22s,box-shadow .22s}
+.ibox:focus-within{border-color:rgba(99,102,241,.45);box-shadow:0 0 0 3px rgba(99,102,241,.06)}
+#ta{flex:1;background:transparent;border:none;outline:none;color:var(--t1);
+  font-family:var(--font);font-size:14px;line-height:1.6;resize:none;
+  max-height:170px;min-height:24px;padding:9px 0}
+#ta::placeholder{color:var(--t3)}
+
+.i-acts{display:flex;align-items:center;gap:2px;padding:4px}
+.ibtn{width:34px;height:34px;border-radius:50%;border:none;background:transparent;
+  color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s}
+.ibtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ibtn:hover{background:var(--s2);color:var(--t1)}
+.send-btn{width:36px;height:36px;border-radius:50%;border:none;background:var(--grad);
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .18s;box-shadow:0 2px 12px rgba(99,102,241,.3)}
+.send-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.send-btn:hover{transform:scale(1.08);box-shadow:0 4px 20px rgba(99,102,241,.45)}
+.send-btn:active{transform:scale(.93)}
+.send-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.hint{font-size:10.5px;color:var(--t3);text-align:center;margin-top:7px;font-weight:300}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--s2);border:1px solid rgba(255,255,255,.1);color:var(--t1);
+  font-size:12.5px;padding:7px 16px;border-radius:20px;opacity:0;
+  transition:all .25s;pointer-events:none;z-index:99;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ─── MOBILE ─── */
+@media(max-width:640px){
+  .sidebar{display:none!important}
+  .msg{padding:7px 4%}
+  .input-zone{padding:8px 4% 14px}
+  .w-title{font-size:26px}
+  .w-cards{grid-template-columns:1fr}
+  .w-chips{display:none}
+  .logo-tag{display:none}
+  .bubble{max-width:85%}
+}
+</style>
+</head>
+<body>
+<div id="ambient"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">✦</div>
+    <span class="logo-name">Astra</span>
+    <span class="logo-tag">AI</span>
+  </div>
+  <div class="hdr-btns">
+    <button class="hbtn" onclick="newChat()" title="Новый чат">
+      <svg viewBox="0 0 24 24"><path d="M12 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/><path d="M15.232 3.232a2.121 2.121 0 0 1 3 3L12 12l-4 1 1-4 6.232-6.232z"/></svg>
+    </button>
+    <button class="hbtn" onclick="toggleSB()" title="Панель">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sb">
+    <button class="sb-new" onclick="newChat()">
+      <div class="sb-new-icon">✦</div>
+      Новый чат
+    </button>
+
+    <div class="sb-label">Примеры</div>
+    <div class="sb-row" onclick="ask('Напиши REST API на Python с FastAPI, JWT-авторизацией, CORS и примерами запросов')"><span>💻</span> Написать код</div>
+    <div class="sb-row" onclick="ask('Объясни квантовые вычисления — простыми словами, с аналогиями и реальными примерами применения')"><span>🔬</span> Объяснить тему</div>
+    <div class="sb-row" onclick="ask('Придумай 5 уникальных идей для ИИ-стартапа в 2025 году. Для каждой: проблема, решение, монетизация, конкуренты')"><span>💡</span> Идеи для проекта</div>
+    <div class="sb-row" onclick="ask('Реши и объясни пошагово: найди все корни уравнения x³ - 6x² + 11x - 6 = 0')"><span>🧮</span> Математика</div>
+    <div class="sb-row" onclick="ask('Переведи на профессиональный английский и исправь стилистику: Мы хотим интегрироваться с вашим продуктом чтобы улучшить наш пользовательский опыт')"><span>🌐</span> Перевод</div>
+    <div class="sb-row" onclick="ask('Напиши профессиональный cover letter для позиции Senior Frontend Engineer в международный стартап. Опыт: 5 лет React, TypeScript')"><span>✍️</span> Написать текст</div>
+    <div class="sb-row" onclick="ask('Подробно сравни PostgreSQL, MySQL и MongoDB: производительность, масштабируемость, use cases, когда что выбрать')"><span>📊</span> Анализ и сравнение</div>
+    <div class="sb-row" onclick="ask('Составь детальный план изучения machine learning с нуля до junior ML engineer за 6 месяцев: ресурсы, проекты, порядок тем')"><span>🗺</span> Составить план</div>
+
+    <div class="sb-label" style="margin-top:auto">Модель</div>
+    <div class="sb-row on"><span>🤖</span> Claude Sonnet 4</div>
+  </aside>
+
+  <!-- PANE -->
+  <div class="pane">
+    <!-- WELCOME -->
+    <div class="welcome" id="wel">
+      <div class="w-orb">✦</div>
+      <div class="w-title">Привет, я <em>Astra</em></div>
+      <div class="w-sub">Умный ИИ-ассистент. Помогу с кодом, математикой, анализом, переводом, текстами и любыми вопросами.</div>
+      <div class="w-chips">
+        <div class="chip">💻 Код</div>
+        <div class="chip">🧮 Математика</div>
+        <div class="chip">✍️ Тексты</div>
+        <div class="chip">🌐 Переводы</div>
+        <div class="chip">🎨 Творчество</div>
+        <div class="chip">📊 Анализ</div>
+        <div class="chip">🔬 Наука</div>
+        <div class="chip">🗂 Планирование</div>
+      </div>
+      <div class="w-cards">
+        <div class="wcard" onclick="ask('Напиши полноценный REST API на Python с FastAPI: JWT-авторизация, CORS, Pydantic-схемы, примеры запросов, комментарии')">
+          <div class="wcard-icon">💻</div>
+          <div class="wcard-t">Написать код</div>
+          <div class="wcard-d">REST API на Python с FastAPI и JWT</div>
+        </div>
+        <div class="wcard" onclick="ask('Объясни как работают большие языковые модели (LLM) — архитектура трансформеров, обучение, RLHF. Простыми словами с примерами')">
+          <div class="wcard-icon">🧠</div>
+          <div class="wcard-t">Объяснить концепцию</div>
+          <div class="wcard-d">Как работают LLM и трансформеры</div>
+        </div>
+        <div class="wcard" onclick="ask('Придумай 5 уникальных идей для мобильного приложения с ИИ. Для каждой: описание, целевая аудитория, монетизация, стек технологий')">
+          <div class="wcard-icon">💡</div>
+          <div class="wcard-t">Идеи для проекта</div>
+          <div class="wcard-d">5 идей для ИИ-приложения с монетизацией</div>
+        </div>
+        <div class="wcard" onclick="ask('Составь подробный 6-месячный план изучения Data Science с нуля: темы по неделям, лучшие ресурсы, проекты для портфолио')">
+          <div class="wcard-icon">🗺</div>
+          <div class="wcard-t">Составить план</div>
+          <div class="wcard-d">Data Science с нуля за 6 месяцев</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="msgs" id="msgs"></div>
+
+    <!-- INPUT -->
+    <div class="input-zone">
+      <div class="input-meta">
+        <div class="model-tag"><div class="model-dot"></div>Claude Sonnet 4</div>
+        <span class="char-info" id="ci">0 / 8000</span>
+      </div>
+      <div id="file-preview"></div>
+      <div class="ibox">
+        <textarea id="ta" placeholder="Задай любой вопрос..." rows="1"
+          oninput="onTa(this)" onkeydown="onKey(event)"></textarea>
+        <div class="i-acts">
+          <button class="ibtn" onclick="triggerFile()" title="Прикрепить файл">
+            <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <button class="ibtn" onclick="clearTa()" title="Очистить">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          <button class="send-btn" id="sb2" onclick="send()" title="Отправить">
+            <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="hint">Astra может ошибаться — проверяйте важную информацию.</div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" multiple style="display:none" onchange="onFiles(this)">
+<div class="toast" id="toast"></div>
+
+<script>
+var hist=[], loading=false, ci=0, sbOpen=true, files=[];
+
+/* sidebar */
+function toggleSB(){sbOpen=!sbOpen;document.getElementById('sb').classList.toggle('closed',!sbOpen)}
+
+/* textarea */
+function onTa(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,170)+'px';
+  document.getElementById('ci').textContent=el.value.length+' / 8000';
+}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}
+function clearTa(){var t=document.getElementById('ta');t.value='';t.style.height='auto';document.getElementById('ci').textContent='0 / 8000';t.focus()}
+
+/* file attach */
+function triggerFile(){document.getElementById('fileInput').click()}
+function onFiles(inp){
+  Array.from(inp.files).forEach(function(f){files.push(f)});
+  renderFilePrev();
+  inp.value='';
+}
+function renderFilePrev(){
+  var fp=document.getElementById('file-preview');
+  if(!files.length){fp.classList.remove('has');fp.innerHTML='';return}
+  fp.classList.add('has');
+  fp.innerHTML=files.map(function(f,i){
+    return '<div class="fp-item">'+
+      '<svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'+
+      '<span>'+esc(f.name.length>22?f.name.slice(0,20)+'…':f.name)+'</span>'+
+      '<button class="fp-rm" onclick="rmFile('+i+')">×</button>'+
+    '</div>';
+  }).join('');
+}
+function rmFile(i){files.splice(i,1);renderFilePrev()}
+
+/* new chat */
+function newChat(){
+  hist=[];files=[];
+  document.getElementById('msgs').innerHTML='';
+  document.getElementById('msgs').classList.remove('on');
+  document.getElementById('wel').style.display='';
+  document.getElementById('file-preview').classList.remove('has');
+  document.getElementById('file-preview').innerHTML='';
+  clearTa();
+  toast('✦ Новый чат начат');
+}
+
+/* ask shortcut */
+function ask(t){document.getElementById('ta').value=t;onTa(document.getElementById('ta'));send()}
+
+/* SEND */
+async function send(){
+  var ta=document.getElementById('ta');
+  var text=ta.value.trim();
+  if((!text&&!files.length)||loading)return;
+
+  loading=true;
+  document.getElementById('sb2').disabled=true;
+
+  document.getElementById('wel').style.display='none';
+  document.getElementById('msgs').classList.add('on');
+
+  /* read files */
+  var fileData=[];
+  if(files.length){
+    for(var fi=0;fi<files.length;fi++){
+      var f=files[fi];
+      try{
+        var r=await readFile(f);
+        fileData.push({name:f.name,content:r,type:f.type});
+      }catch(e){fileData.push({name:f.name,content:'[не удалось прочитать]',type:f.type})}
+    }
+  }
+
+  addUser(text,fileData);
+  clearTa();
+  var fileNames=files.map(function(f){return f.name});
+  files=[];renderFilePrev();
+
+  /* build message content */
+  var userMsg=text;
+  if(fileData.length){
+    userMsg+='\n\n[Прикреплённые файлы]\n'+fileData.map(function(fd){
+      return '--- '+fd.name+' ---\n'+fd.content;
+    }).join('\n\n');
+  }
+
+  hist.push({role:'user',content:userMsg||'(файлы без текста)'});
+  var tid=addThink();
+
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:4000,
+        system:'Ты — Astra, интеллектуальный ИИ-ассистент нового поколения. Отличаешься глубиной знаний, точностью и умением объяснять сложное.\n\nВозможности:\n- Программирование: Python, JavaScript, TypeScript, Go, Rust, Java, C++, SQL, и любые другие языки\n- Математика, физика, химия, биология, статистика\n- Анализ данных, machine learning, алгоритмы\n- Перевод и редактирование текстов на любых языках\n- Написание документов, писем, резюме, статей\n- Бизнес-анализ, стратегия, идеи для стартапов\n- История, философия, наука, культура\n- Планирование и структурирование задач\n- Анализ прикреплённых файлов и кода\n\nПравила:\n1. Отвечай ВСЕГДА на том языке, на котором задан вопрос\n2. Давай развёрнутые, подробные, структурированные ответы\n3. Используй Markdown: **жирный**, *курсив*, `код`, ```блоки кода с языком```, # Заголовки, - списки, > цитаты, | таблицы |\n4. В коде всегда указывай язык в блоке, пиши подробные комментарии\n5. Если вопрос сложный — разбей ответ на логичные части с заголовками\n6. Приводи конкретные примеры, не ограничивайся теорией\n7. Если приложены файлы — анализируй их содержимое\n8. Не начинай ответ с повторения вопроса\n9. Будь прямым и конкретным — без воды и лишних disclaimers',
+        messages:hist
+      })
+    });
+    var data=await res.json();
+    rmEl(tid);
+    if(data.content&&data.content[0]&&data.content[0].text){
+      var ai=data.content[0].text;
+      hist.push({role:'assistant',content:ai});
+      addAI(ai);
+    }else{
+      addAI('Произошла ошибка при получении ответа. Попробуйте ещё раз.');
+    }
+  }catch(e){
+    rmEl(tid);
+    addAI('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+  }
+  loading=false;
+  document.getElementById('sb2').disabled=false;
+  document.getElementById('ta').focus();
+}
+
+function readFile(f){
+  return new Promise(function(res,rej){
+    var r=new FileReader();
+    r.onload=function(e){res(e.target.result)};
+    r.onerror=rej;
+    if(f.type.startsWith('text/')||f.name.match(/\.(js|ts|py|json|md|txt|html|css|yaml|yml|csv|xml|sh|rs|go|java|cpp|c|h|sql|env|toml|ini|conf)$/i)){
+      r.readAsText(f);
+    }else{
+      res('[бинарный файл: '+f.name+', '+Math.round(f.size/1024)+'KB]');
+    }
+  });
+}
+
+/* ─── UI builders ─── */
+function addUser(text,fileData){
+  var el=mk('div','msg msg-u');
+  var html='';
+  if(fileData&&fileData.length){
+    html+=fileData.map(function(fd){
+      return '<div class="file-pill"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'+esc(fd.name)+'</div>';
+    }).join('');
+  }
+  if(text) html+='<div class="bubble">'+esc(text)+'</div>';
+  el.innerHTML=html;
+  app(el);
+}
+
+function addThink(){
+  var id='th'+Date.now();
+  var el=mk('div','msg msg-a');
+  el.id=id;
+  el.innerHTML='<div class="ai-av">✦</div><div class="ai-wrap"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  app(el);
+  return id;
+}
+
+function addAI(text){
+  var el=mk('div','msg msg-a');
+  var mid='m'+Date.now();
+  el.id=mid;
+  el.dataset.raw=text;
+  el.innerHTML=
+    '<div class="ai-av">✦</div>'+
+    '<div class="ai-wrap">'+
+      '<div class="ai-text">'+md(text)+'</div>'+
+      '<div class="msg-acts">'+
+        '<button class="act" onclick="cpMsg(\''+mid+'\',this)"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Копировать</button>'+
+        '<button class="act" onclick="regen(\''+mid+'\')"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Повторить</button>'+
+        '<button class="act" onclick="like(this)"><svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></button>'+
+        '<button class="act" onclick="dislike(this)"><svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg></button>'+
+      '</div>'+
+    '</div>';
+  app(el);
+}
+
+function mk(tag,cls){var e=document.createElement(tag);e.className=cls;return e}
+function app(el){var m=document.getElementById('msgs');m.appendChild(el);requestAnimationFrame(function(){m.scrollTop=m.scrollHeight})}
+function rmEl(id){var e=document.getElementById(id);if(e)e.remove()}
+function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function cpMsg(mid,btn){
+  var e=document.getElementById(mid);
+  navigator.clipboard.writeText(e?e.dataset.raw||'':'').then(function(){
+    btn.classList.add('blue');
+    btn.innerHTML='<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Скопировано';
+    setTimeout(function(){btn.classList.remove('blue');btn.innerHTML='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Копировать'},2000);
+  });
+}
+
+function regen(mid){
+  if(loading)return;
+  var e=document.getElementById(mid);if(!e)return;
+  e.remove();
+  if(hist.length&&hist[hist.length-1].role==='assistant')hist.pop();
+  if(hist.length&&hist[hist.length-1].role==='user'){
+    var last=hist.pop().content;
+    document.getElementById('ta').value=last.split('\n\n[Прикреплённые файлы]')[0];
+    onTa(document.getElementById('ta'));
+    send();
+  }
+}
+
+function like(btn){
+  btn.classList.toggle('green');
+  btn.parentElement.querySelectorAll('.act').forEach(function(b){if(b!==btn)b.classList.remove('red')});
+  if(btn.classList.contains('green'))toast('Спасибо! 👍');
+}
+function dislike(btn){
+  btn.classList.toggle('red');
+  btn.parentElement.querySelectorAll('.act').forEach(function(b){if(b!==btn)b.classList.remove('green')});
+  if(btn.classList.contains('red'))toast('Принято к сведению 👎');
+}
+
+function cpCode(btn,id){
+  var e=document.getElementById(id);
+  navigator.clipboard.writeText(e?e.textContent:'').then(function(){
+    btn.textContent='✓ Скопировано';
+    setTimeout(function(){btn.innerHTML='<svg viewBox="0 0 24 24" width="12" height="12" style="stroke:currentColor;fill:none;stroke-width:1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Копировать'},2000);
+  });
+}
+
+function toast(msg){
+  var e=document.getElementById('toast');
+  e.textContent=msg;e.classList.add('on');
+  setTimeout(function(){e.classList.remove('on')},2400);
+}
+
+/* ─── Markdown ─── */
+var _ci=0;
+function md(src){
+  var s=src;
+
+  /* code blocks */
+  s=s.replace(/```(\w*)\n?([\s\S]*?)```/g,function(_,lang,code){
+    var id='cb'+(++_ci);
+    var lb=lang||'code';
+    return '<div class="cb">'+
+      '<div class="cb-head">'+
+        '<span>'+lb+'</span>'+
+        '<button class="cb-copy" onclick="cpCode(this,\''+id+'\')">'+
+          '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'+
+          ' Копировать'+
+        '</button>'+
+      '</div>'+
+      '<pre><code id="'+id+'">'+esc(code.trim())+'</code></pre>'+
+    '</div>';
+  });
+
+  /* inline code */
+  s=s.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+  /* headers */
+  s=s.replace(/^#### (.+)$/gm,'<h3>$1</h3>');
+  s=s.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+  s=s.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+  s=s.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+  /* bold+italic */
+  s=s.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
+  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+  s=s.replace(/__(.+?)__/g,'<strong>$1</strong>');
+  s=s.replace(/_([^_\n]+)_/g,'<em>$1</em>');
+  /* hr */
+  s=s.replace(/^[-*]{3,}$/gm,'<hr>');
+  /* blockquote */
+  s=s.replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>');
+  /* tables */
+  s=s.replace(/((?:^\|.+\|\n?)+)/gm,function(_,tbl){
+    var rows=tbl.trim().split('\n');
+    var out='<table>';
+    rows.forEach(function(row,i){
+      if(/^\|[-| :]+\|$/.test(row.trim()))return;
+      var cells=row.split('|').filter(function(c,ci,a){return ci>0&&ci<a.length-1});
+      var tag=i===0?'th':'td';
+      out+='<tr>'+cells.map(function(c){return '<'+tag+'>'+c.trim()+'</'+tag+'>'}).join('')+'</tr>';
+    });
+    return out+'</table>';
+  });
+  /* numbered list */
+  s=s.replace(/^\d+\. (.+)$/gm,'<li style="list-style-type:decimal">$1</li>');
+  /* bullet list */
+  s=s.replace(/^[-*+] (.+)$/gm,'<li>$1</li>');
+  /* wrap li */
+  s=s.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\n?)+)/g,'<ul>$1</ul>');
+  /* links */
+  s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  /* paragraphs */
+  var parts=s.split(/\n{2,}/);
+  s=parts.map(function(b){
+    b=b.trim();if(!b)return'';
+    if(/^<(h[1-4]|pre|ul|ol|table|blockquote|hr|div)/.test(b))return b;
+    return'<p>'+b.replace(/\n/g,'<br>')+'</p>';
+  }).join('\n');
+
+  return s;
+}
+
+document.getElementById('ta').focus();
+</script>
+</body>
+</html>
